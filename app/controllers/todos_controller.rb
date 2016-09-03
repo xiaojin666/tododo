@@ -1,8 +1,20 @@
 class TodosController < ApplicationController
+  before_action :authenticate!
+
   def index
-    @todos = Todo.all
-    @todo = Todo.new
+    @todos = @current_user.todos
+   @todo= Todo.new
+ end
+
+ private
+  def authenticate!
+    @current_user = User.find_by(id: session[:user_id])
+    if @current_user.blank?
+      redirect_to login_path and return
+    end
   end
+
+end
 
   def show
   end
@@ -11,12 +23,11 @@ class TodosController < ApplicationController
     @todo = Todo.new
   end
 
-  def create
-    @todo = Todo.new(todo_params)
-    if @todo.save
-      redirect_to todos_path
-    else
-      render 'new'
+def create
+  todo = Todo.new(todo_params)
+  todo.user_id = @current_user.id
+  if todo.save!
+    redirect_to todos_path
   end
 end
 
@@ -40,4 +51,3 @@ end
   def todo_params
     todo_params = params.require(:todo).permit(:title,:finished)
   end
-end
